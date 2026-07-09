@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Pro</title>
+  <style>
+    body { background:#111; color:#fff; font-family:Arial; }
+    .box { border:1px solid #555; padding:10px; margin:10px; }
+    #chat { height:300px; overflow:auto; }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <input id="u" placeholder="user">
+  <input id="p" type="password" placeholder="pass">
+  <button onclick="reg()">Reg</button>
+  <button onclick="login()">Login</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div class="box">
+  Online: <span id="on"></span>
+</div>
+
+<div class="box" id="chat"></div>
+
+<div class="box">
+  <input id="msg">
+  <button onclick="send()">Send</button>
+</div>
+
+<div class="box">
+  <input id="to" placeholder="to user">
+  <input id="pm">
+  <button onclick="sendPM()">Send PM</button>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const s = io();
+
+function reg(){
+  s.emit('register', { username:u.value, password:p.value });
+}
+function login(){
+  s.emit('login', { username:u.value, password:p.value });
+}
+function logout(){
+  s.emit('logout');
+}
+
+function send(){
+  s.emit('msg', msg.value);
+}
+function sendPM(){
+  s.emit('pm', { to:to.value, text:pm.value });
+}
+
+s.on('msg', d=>{
+  chat.innerHTML += `<div>${d.from}: ${d.text}</div>`;
+});
+
+s.on('pm', d=>{
+  chat.innerHTML += `<div style="color:yellow">(PM) ${d.from}: ${d.text}</div>`;
+});
+
+s.on('history', h=>{
+  chat.innerHTML='';
+  h.forEach(d=>{
+    chat.innerHTML += `<div>${d.from}: ${d.text}</div>`;
+  });
+});
+
+s.on('online', list=>{
+  on.innerText = list.join(', ');
+});
+
+s.on('err', alert);
+s.on('ok', alert);
+</script>
+
+</body>
+</html>
